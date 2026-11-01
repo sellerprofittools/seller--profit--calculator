@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Seller Profit Calculator</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #182230;
+      --muted: #697586;
+      --line: #e2e7ef;
+      --panel: #ffffff;
+      --background: #f5f7fb;
+      --accent: #5b53e8;
+      --accent-dark: #4139c9;
+      --green: #14804a;
+      --red: #c0393b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .wrap {
+      width: min(100% - 32px, 980px);
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+
+    header { margin-bottom: 24px; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 5vw, 2.65rem);
+      letter-spacing: -.04em;
+    }
+
+    .intro {
+      max-width: 660px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 8px 28px rgb(23 35 58 / 5%);
+    }
+
+    .form-card { padding: 24px; }
+
+    .section-title {
+      margin: 0 0 18px;
+      font-size: 1.08rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: .9rem;
+      font-weight: 650;
+    }
+
+    .hint {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.4;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid #cfd6e2;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      padding: 10px 12px;
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgb(91 83 232 / 16%);
+      border-color: var(--accent);
+    }
+
+    .divider {
+      grid-column: 1 / -1;
+      height: 1px;
+      margin: 2px 0;
+      background: var(--line);
+    }
+
+    .results {
+      position: sticky;
+      top: 16px;
+      overflow: hidden;
+    }
+
+    .profit-box {
+      padding: 24px;
+      background: linear-gradient(135deg, #5149dc, #776ff3);
+      color: #fff;
+    }
+
+    .profit-label {
+      margin: 0;
+      color: rgb(255 255 255 / 83%);
+      font-size: .9rem;
+      font-weight: 600;
+    }
+
+    .profit-value {
+      margin: 6px 0 4px;
+      font-size: clamp(2.25rem, 7vw, 3.2rem);
+      font-weight: 780;
+      letter-spacing: -.055em;
+      overflow-wrap: anywhere;
+    }
+
+    .margin-line {
+      margin: 0;
+      color: rgb(255 255 255 / 87%);
+      font-size: .9rem;
+    }
+
+    .breakdown { padding: 22px 24px 24px; }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf0f5;
+      font-size: .92rem;
+    }
+
+    .row:last-of-type { border-bottom: 0; }
+    .row span:first-child { color: var(--muted); }
+    .row strong { text-align: right; }
+
+    .break-even {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #f3f2ff;
+    }
+
+    .break-even span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .break-even strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--accent-dark);
+      font-size: 1.25rem;
+    }
+
+    .note {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.5;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .privacy {
+      margin: 0;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: .87rem;
+      font-weight: 650;
+      padding: 9px 13px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #f0f2f8; }
+
+    .negative { color: var(--red) !important; }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 26px 0; }
+      .layout { grid-template-columns: 1fr; }
+      .results { position: static; }
+    }
+
+    @media (max-width: 440px) {
+      .fields { grid-template-columns: 1fr; }
+      .field.full, .divider { grid-column: auto; }
+      .form-card, .profit-box { padding: 20px; }
+      .breakdown { padding: 18px 20px 20px; }
+      .footer { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">Free seller tool</p>
+      <h1>Seller Profit Calculator</h1>
+      <p class="intro">
+        See what you could actually keep after product costs, shipping, and fees.
+        Enter your own fee rates for the marketplace you use.
+      </p>
+    </header>
+
+    <div class="layout">
+      <section class="card form-card" aria-labelledby="inputs-title">
+        <h2 class="section-title" id="inputs-title">Sale details</h2>
+
+        <div class="fields">
+          <div class="field full">
+            <label for="currency">Currency</label>
+            <select id="currency">
+              <option value="USD">US Dollar (USD)</option>
+              <option value="EUR">Euro (EUR)</option>
+              <option value="GBP">British Pound (GBP)</option>
+              <option value="CAD">Canadian Dollar (CAD)</option>
+              <option value="AUD">Australian Dollar (AUD)</option>
+              <option value="NZD">New Zealand Dollar (NZD)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="salePrice">Item sale price</label>
+            <input id="salePrice" type="number" min="0" step="0.01" value="35">
+          </div>
+
+          <div class="field">
+            <label for="itemCost">What the item cost you</label>
+            <input id="itemCost" type="number" min="0" step="0.01" value="12">
+          </div>
+
+          <div class="field">
+            <label for="shippingCharged">Shipping charged to buyer</label>
+            <input id="shippingCharged" type="number" min="0" step="0.01" value="4">
+          </div>
+
+          <div class="field">
+            <label for="shippingCost">Your shipping cost</label>
+            <input id="shippingCost" type="number" min="0" step="0.01" value="5.50">
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label for="platformFee">Platform fee (%)</label>
+            <input id="platformFee" type="number" min="0" max="99.99" step="0.01" value="6.5">
+            <span class="hint">Use the percentage charged by your marketplace.</span>
+          </div>
+
+          <div class="field">
+            <label for="paymentFee">Payment processing (%)</label>
+            <input id="paymentFee" type="number" min="0" max="99.99" step="0.01" value="3">
+          </div>
+
+          <div class="field">
+            <label for="fixedFee">Fixed fee per sale</label>
+            <input id="fixedFee" type="number" min="0" step="0.01" value="0.25">
+          </div>
+
+          <div class="field">
+            <label for="packaging">Packaging cost</label>
+            <input id="packaging" type="number" min="0" step="0.01" value="0.75">
+          </div>
+
+          <div class="field full">
+            <label for="otherCost">Other costs per sale</label>
+            <input id="otherCost" type="number" min="0" step="0.01" value="0">
+          </div>
+        </div>
+
+        <div class="footer">
+          <p class="privacy">Your entries stay in this browser and aren’t uploaded.</p>
+          <button type="button" id="resetButton">Reset example</button>
+        </div>
+      </section>
+
+      <aside class="card results" aria-live="polite" aria-label="Profit estimate">
+        <div class="profit-box">
+          <p class="profit-label">Estimated profit per sale</p>
+          <p class="profit-value" id="profit">$0.00</p>
+          <p class="margin-line">Profit margin: <strong id="margin">0%</strong></p>
+        </div>
+
+        <div class="breakdown">
+          <h2 class="section-title">Your breakdown</h2>
+          <div class="row"><span>Total collected</span><strong id="revenue">$0.00</strong></div>
+          <div class="row"><span>Marketplace + payment fees</span><strong id="fees">$0.00</strong></div>
+          <div class="row"><span>Product and other costs</span><strong id="costs">$0.00</strong></div>
+          <div class="break-even">
+            <span>Break-even item price</span>
+            <strong id="breakEven">$0.00</strong>
+          </div>
+          <p class="note">
+            Estimate only. This assumes percentage fees apply to the item price
+            plus shipping collected, and doesn’t include taxes or fees not entered above.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const ids = [
+        "currency", "salePrice", "itemCost", "shippingCharged", "shippingCost",
+        "platformFee", "paymentFee", "fixedFee", "packaging", "otherCost"
+      ];
+
+      const defaults = {
+        currency: "USD",
+        salePrice: 35,
+        itemCost: 12,
+        shippingCharged: 4,
+        shippingCost: 5.50,
+        platformFee: 6.5,
+        paymentFee: 3,
+        fixedFee: 0.25,
+        packaging: 0.75,
+        otherCost: 0
+      };
+
+      const getNumber = (id) => {
+        const value = Number(document.getElementById(id).value);
+        return Number.isFinite(value) && value > 0 ? value : 0;
+      };
+
+      const money = (amount) => {
+        const currency = document.getElementById("currency").value;
+        try {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency
+          }).format(amount);
+        } catch {
+          return `${currency} ${amount.toFixed(2)}`;
+        }
+      };
+
+      function calculate() {
+        const sale = getNumber("salePrice");
+        const itemCost = getNumber("itemCost");
+        const shippingCharged = getNumber("shippingCharged");
+        const shippingCost = getNumber("shippingCost");
+        const platformRate = getNumber("platformFee") / 100;
+        const paymentRate = getNumber("paymentFee") / 100;
+        const fixedFee = getNumber("fixedFee");
+        const packaging = getNumber("packaging");
+        const otherCost = getNumber("otherCost");
+
+        const totalRate = platformRate + paymentRate;
+        const revenue = sale + shippingCharged;
+        const percentageFees = revenue * totalRate;
+        const fees = percentageFees + fixedFee;
+        const nonFeeCosts = itemCost + shippingCost + packaging + otherCost;
+        const profit = revenue - fees - nonFeeCosts;
+        const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+        document.getElementById("profit").textContent = money(profit);
+        document.getElementById("profit").classList.toggle("negative", profit < 0);
+        document.getElementById("margin").textContent = `${margin.toFixed(1)}%`;
+        document.getElementById("revenue").textContent = money(revenue);
+        document.getElementById("fees").textContent = money(fees);
+        document.getElementById("costs").textContent = money(nonFeeCosts);
+
+        const remainingRate = 1 - totalRate;
+        const breakEvenEl = document.getElementById("breakEven");
+
+        if (remainingRate <= 0) {
+          breakEvenEl.textContent = "Not possible with these fees";
+        } else {
+          const breakEvenPrice =
+            Math.max(0, (nonFeeCosts + fixedFee - shippingCharged * remainingRate) / remainingRate);
+          breakEvenEl.textContent = money(breakEvenPrice);
+        }
+      }
+
+      ids.forEach((id) => {
+        document.getElementById(id).addEventListener("input", calculate);
+        document.getElementById(id).addEventListener("change", calculate);
+      });
+
+      document.getElementById("resetButton").addEventListener("click", () => {
+        ids.forEach((id) => {
+          document.getElementById(id).value = defaults[id];
+        });
+        calculate();
+      });
+
+      calculate();
+    })();
+  </script>
+</body>
+</html>
