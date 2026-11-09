@@ -119,6 +119,19 @@
       border-color: var(--accent);
     }
 
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -4px 0 18px;
+    }
+
+    .preset-row button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: #f0efff;
+      color: var(--accent-dark);
+    }
+
     .divider {
       grid-column: 1 / -1;
       height: 1px;
@@ -260,6 +273,13 @@
     <div class="layout">
       <section class="card form-card" aria-labelledby="inputs-title">
         <h2 class="section-title" id="inputs-title">Sale details</h2>
+        <p class="hint" style="margin: -10px 0 12px;">Quick fee presets (US sellers). You can still edit every fee below.</p>
+        <div class="preset-row" aria-label="Marketplace fee presets">
+          <button type="button" data-preset="ebay" aria-pressed="false">eBay</button>
+          <button type="button" data-preset="mercari" aria-pressed="false">Mercari</button>
+          <button type="button" data-preset="poshmark" aria-pressed="false">Poshmark</button>
+          <button type="button" data-preset="custom" aria-pressed="true">Custom</button>
+        </div>
 
         <div class="fields">
           <div class="field full">
@@ -324,7 +344,7 @@
         </div>
 
         <div class="footer">
-          <p class="privacy">Your entries stay in this browser and arenât uploaded.</p>
+          <p class="privacy">Your entries stay in this browser and arenÃ¢ÂÂt uploaded.</p>
           <button type="button" id="resetButton">Reset example</button>
         </div>
       </section>
@@ -347,7 +367,7 @@
           </div>
           <p class="note">
             Estimate only. This assumes percentage fees apply to the item price
-            plus shipping collected, and doesnât include taxes or fees not entered above.
+            plus shipping collected, and doesnÃ¢ÂÂt include taxes or fees not entered above.
           </p>
         </div>
       </aside>
@@ -391,8 +411,37 @@
         }
       };
 
+      let activePreset = "custom";
+
+      function applyPreset(name) {
+        activePreset = name;
+        const sale = Number(document.getElementById("salePrice").value) || 0;
+        const values = {
+          ebay: { platformFee: 13.6, paymentFee: 0, fixedFee: sale <= 10 ? 0.30 : 0.40 },
+          mercari: { platformFee: 10, paymentFee: 0, fixedFee: 0 },
+          poshmark: { platformFee: sale < 15 ? 0 : 20, paymentFee: 0, fixedFee: sale < 15 ? 2.95 : 0 },
+          custom: null
+        };
+        if (values[name]) {
+          Object.entries(values[name]).forEach(([id, value]) => {
+            document.getElementById(id).value = value;
+          });
+        }
+        document.querySelectorAll("[data-preset]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.preset === name));
+        });
+        calculate();
+      }
+
       function calculate() {
         const sale = getNumber("salePrice");
+        if (activePreset === "poshmark") {
+          document.getElementById("platformFee").value = sale < 15 ? 0 : 20;
+          document.getElementById("fixedFee").value = sale < 15 ? 2.95 : 0;
+        }
+        if (activePreset === "ebay") {
+          document.getElementById("fixedFee").value = (sale + getNumber("shippingCharged")) <= 10 ? 0.30 : 0.40;
+        }
         const itemCost = getNumber("itemCost");
         const shippingCharged = getNumber("shippingCharged");
         const shippingCost = getNumber("shippingCost");
@@ -404,7 +453,8 @@
 
         const totalRate = platformRate + paymentRate;
         const revenue = sale + shippingCharged;
-        const percentageFees = revenue * totalRate;
+        const feeBase = activePreset === "poshmark" ? sale : revenue;
+        const percentageFees = feeBase * totalRate;
         const fees = percentageFees + fixedFee;
         const nonFeeCosts = itemCost + shippingCost + packaging + otherCost;
         const profit = revenue - fees - nonFeeCosts;
@@ -430,11 +480,30 @@
       }
 
       ids.forEach((id) => {
-        document.getElementById(id).addEventListener("input", calculate);
-        document.getElementById(id).addEventListener("change", calculate);
+        const input = document.getElementById(id);
+        input.addEventListener("input", () => {
+          if (["platformFee", "paymentFee", "fixedFee"].includes(id)) {
+            activePreset = "custom";
+            document.querySelectorAll("[data-preset]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.preset === "custom")));
+          }
+          calculate();
+        });
+        input.addEventListener("change", () => {
+          if (["platformFee", "paymentFee", "fixedFee"].includes(id)) {
+            activePreset = "custom";
+            document.querySelectorAll("[data-preset]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.preset === "custom")));
+          }
+          calculate();
+        });
+      });
+
+      document.querySelectorAll("[data-preset]").forEach((button) => {
+        button.addEventListener("click", () => applyPreset(button.dataset.preset));
       });
 
       document.getElementById("resetButton").addEventListener("click", () => {
+        activePreset = "custom";
+        document.querySelectorAll("[data-preset]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.preset === "custom")));
         ids.forEach((id) => {
           document.getElementById(id).value = defaults[id];
         });
